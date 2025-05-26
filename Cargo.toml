@@ -1,0 +1,11 @@
+[package]
+name = "pku-minic"
+version = "0.1.0"
+edition = "2021"
+
+[build-dependencies]
+lalrpop = "0.19.7"
+
+[dependencies]
+koopa = "0.0.7"
+lalrpop-util = { version = "0.19.7", features = ["lexer"] }
