@@ -17,7 +17,7 @@ impl GenerateAsm for koopa::ir::FunctionData {
     fn generate(&self, output: &mut String) {
         output.push_str(format!("  .globl {}\n",self.name().trim_start_matches('@')).as_str());
         output.push_str(format!("{}:\n",self.name().trim_start_matches('@')).as_str());
-        for (&bb, node) in self.layout().bbs() {
+        for (&_bb, node) in self.layout().bbs() {
             for &inst in node.insts().keys(){
                 let inst_value_data = self.dfg().value(inst);
                 match inst_value_data.kind(){

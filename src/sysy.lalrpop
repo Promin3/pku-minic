@@ -24,9 +24,27 @@ FuncType: FuncType = "int" => FuncType::Int;
 
 Block: Block = "{" <stmt: Stmt> "}" => Block { <> };
 
-Stmt: Stmt = "return" <num: Number> ";" => Stmt { <> };
+Stmt: Stmt = "return" <exp: Exp> ";" => Stmt { <> };
 
-Number: i32 = <num: IntConst> => <>;
+Exp: Exp = <unaryexp: UnaryExp> => Exp { <> };
+
+PrimaryExp: PrimaryExp = { 
+  "(" <exp: Exp> ")" => PrimaryExp::Exp(Box::new(exp)),
+  <num: Number> => PrimaryExp::Number(num),
+};
+
+UnaryExp: UnaryExp = {
+  PrimaryExp => UnaryExp::Primary(<>), 
+  "+" <UnaryExp> => <>, //忽略正号，原值传递
+  <op: UnaryOp> <exp: UnaryExp> => UnaryExp::Unary(op, Box::new(exp)),
+}
+
+UnaryOp: UnaryOp = {
+  "-" => UnaryOp::Neg,
+  "!" => UnaryOp::LogiNot,
+}
+
+Number: i32 = IntConst => <>;
 
 Ident: String = r"[_a-zA-Z][_a-zA-Z0-9]*" => <>.to_string();
 

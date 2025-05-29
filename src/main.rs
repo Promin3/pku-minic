@@ -12,7 +12,7 @@ mod assember;
 
 // 引用 lalrpop 生成的解析器
 // 因为我们刚刚创建了 sysy.lalrpop, 所以模块名是 sysy
-
+// cargo run -- -koopa ./debug/hello.c -o hello.riscv
 lalrpop_mod!(sysy);
 
 fn main() -> Result<()> {
@@ -29,16 +29,12 @@ fn main() -> Result<()> {
 
   // 调用 lalrpop 生成的 parser 解析输入文件
   let ast = sysy::CompUnitParser::new().parse(&input).unwrap();
-
-  // // 输出解析得到的 AST
-  // println!("{:#?}", ast);
-  // fs::write(output, generate_ir(&ast))?;
   let ir_string = generate_ir(&ast);
+  println!("{}", ir_string);
   let driver = koopa::front::Driver::from(ir_string);
   let program = driver.generate_program().unwrap();
   let mut asm_string = String::new();
   program.generate(&mut asm_string);
   fs::write(output, asm_string)?;
   Ok(())
-  
 }

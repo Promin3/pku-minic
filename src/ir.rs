@@ -22,19 +22,53 @@ fn generate_func_def(func_def: &FuncDef, ir: &mut String) {
     // 生成入口基本块
     ir.push_str("%entry:\n");
     
-    // 处理函数体
-    generate_block(&func_def.block, ir);
+    let mut mark = 0;
+    generate_block(&func_def.block, ir, &mut mark);
     
-    // 函数结束
     ir.push_str("}\n");
 }
 
-fn generate_block(block: &Block, ir: &mut String) {
+fn generate_block(block: &Block, ir: &mut String, mark: &mut i32) {
     // 处理语句
-    generate_stmt(&block.stmt, ir);
+    generate_stmt(&block.stmt, ir, mark);
 }
 
-fn generate_stmt(stmt: &Stmt, ir: &mut String) {
+fn generate_stmt(stmt: &Stmt, ir: &mut String, mark: &mut i32) {
     // 处理 return 语句
-    ir.push_str(&format!("    ret {}\n", stmt.num));
+    generate_exp(&stmt.exp,ir, mark);
+    ir.push_str(&format!("  ret %{}\n", *mark - 1));
+}
+
+fn generate_exp(exp: &Exp, ir: &mut String, mark: &mut i32) -> String {
+    generate_unary_exp(&exp.unaryexp, ir, mark)
+}
+
+fn generate_unary_exp(unaryexp: &UnaryExp, ir: &mut String, mark: &mut i32) -> String {
+    match unaryexp {
+        UnaryExp::Primary(primary) => generate_primary_exp(primary, ir, mark),
+        UnaryExp::Unary(op, exp) => {
+            match op {
+                UnaryOp::Neg => {
+                    let exp_str = generate_unary_exp(exp, ir, mark);
+                    ir.push_str(&format!("  %{} = sub 0, {}\n", mark, exp_str));
+                    *mark += 1;
+                    format!("%{}", *mark - 1)
+                },
+                UnaryOp::LogiNot => {
+                    let exp_str = generate_unary_exp(exp, ir, mark);
+                    ir.push_str(&format!("  %{} = eq {}, 0\n", mark, exp_str));
+                    *mark += 1;
+                    format!("%{}", *mark - 1)
+                }
+            }
+        }
+        
+    }
+}
+
+fn generate_primary_exp(primary: &PrimaryExp, ir: &mut String, mark: &mut i32) -> String {
+    match primary {
+        PrimaryExp::Exp(exp) => generate_exp(exp, ir, mark),
+        PrimaryExp::Number(num) => num.to_string()
+    }
 }
